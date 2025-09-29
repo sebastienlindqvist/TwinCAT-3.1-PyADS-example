@@ -30,7 +30,7 @@ class ADS_Route():
         content_width = box_width - 4  # Subtract space for borders (│ and │)
         # Print the top border
         print("\n")
-        print("╭─ Twin"+colored('\033[1m'+'CAT', 'red')+'\033[0m'+" pyAds ROS2 " + "─" * (box_width - 25) + "╮")
+        print("╭─ TwinCAT pyAds" + "─" * (box_width - 19) + "╮")
         # Print a separator
         # Print the header
         header = " This is a demo for connecting to TwinCAT XAR via pyAds "
