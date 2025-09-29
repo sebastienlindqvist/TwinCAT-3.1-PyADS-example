@@ -1,0 +1,19 @@
+# This configuration file is used to set up the pyads library objects to establish communication to a TwinCAT XAR
+
+# This is the IP address of the host machine with the TwinCat Software
+plc_ip: '192.168.0.3'
+# This should match the plc_ip address. due to no DNS server
+host_name: '192.168.0.3'
+# This is gotten from the TwinCat System About menu "AMS Net id" of the machine 
+remote_ads: '192.168.0.3.1.1'
+
+# This is arbitrarily named
+route_name: 'Windows_To_Linux'
+# This is the local IP of the machine running the python code
+local_ip: '192.168.0.4'
+# Add '.1.1' on the end of the IP address, unless this machine also has TwinCAT, if so, use that AmsNetID instead.
+sender_ams: '192.168.0.4.1.1'
+
+# Default username and password for ePCs and IPCs
+Username: 'Administrator'
+Password: '1'
