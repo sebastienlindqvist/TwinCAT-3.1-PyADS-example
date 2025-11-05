@@ -153,12 +153,12 @@ class ADS_Route():
 '''---------------------------------------------------------------------------------------------------------'''
 
 box = """
-╭───────────────────────────────────────────╮
-│ --hide    Hide print statements           │
-│ --show    Show print statements           │
-│ --read    Enable verbose output           │
-│ --write   Show this help box              │
-╰───────────────────────────────────────────╯
+╭─────────────────────────────────────────────╮
+│ --hide    Hide print statements             │
+│ --show    Show print statements             │
+│ --read    Read TC3 var w/ name & type       │
+│ --write   Write TC3 var w/ name, val & type │
+╰─────────────────────────────────────────────╯
 """
 
 parser = argparse.ArgumentParser(
