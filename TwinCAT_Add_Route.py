@@ -1,7 +1,6 @@
 import pyads
 import yaml
 from termcolor import colored
-
 import argparse
 import sys
 
@@ -152,90 +151,86 @@ class ADS_Route():
 
 '''---------------------------------------------------------------------------------------------------------'''
 
-box = """
-╭─────────────────────────────────────────────╮
-│ --hide    Hide print statements             │
-│ --show    Show print statements             │
-│ --read    Read TC3 var w/ name & type       │
-│ --write   Write TC3 var w/ name, val & type │
-╰─────────────────────────────────────────────╯
-"""
+class ArgumentParser:
+    def __init__(self):
+        self.parser = argparse.ArgumentParser(
+            epilog=self.box(),
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            add_help=False  # Disable default help
+        )
+        self.parser.add_argument('--show', action='store_true', help=argparse.SUPPRESS)
+        self.parser.add_argument('--help', action='store_true', help=argparse.SUPPRESS)  # Custom help
+        self.parser.add_argument('--read', nargs=2, type=str, metavar=('A', 'B'), help=argparse.SUPPRESS)
+        self.parser.add_argument('--write', nargs=3, type=str, metavar=('A', 'B', 'C'), help=argparse.SUPPRESS)
 
-parser = argparse.ArgumentParser(
-    epilog=box,
-    formatter_class=argparse.RawDescriptionHelpFormatter,
-    add_help=False  # Disable default help
-)
-parser.add_argument('--show', action='store_true', help=argparse.SUPPRESS)
-parser.add_argument('--help', action='store_true', help=argparse.SUPPRESS)  # Custom help
+    def box(self):
+        return """
+        ╭─────────────────────────────────────────────╮
+        │ --hide    Hide print statements             │
+        │ --show    Show print statements             │
+        │ --read    Read TC3 var w/ name & type       │
+        │ --write   Write TC3 var w/ name, val & type │
+        ╰─────────────────────────────────────────────╯
+        """
 
-parser.add_argument('--read', nargs=2, type=str, metavar=('A','B'), help=argparse.SUPPRESS)
-parser.add_argument('--write', nargs=3, type=str, metavar=('A','B','C'), help=argparse.SUPPRESS)
+    def parse(self):
+        return self.parser.parse_args()
 
-args = parser.parse_args()
+    def handle_args(self, testObject):
+        if self.args.help:
+            print(self.box())
+            sys.exit(0)
 
-def isfloat(string):
-    try:
-        float(string)
-        return True
-    except ValueError:
-        return False
+        def isfloat(string):
+            try:
+                float(string)
+                return True
+            except ValueError:
+                return False
 
-'''---------------------------------------------------------------------------------------------------------'''
+        def parse_valuetype(s):
+            if isfloat(s):  # Check for float first
+                return float(s)
+            if s.isdigit():
+                return int(s)
+            if s.startswith("pyads."):
+                name = s.split(".", 1)[1]
+                if hasattr(pyads, name):
+                    return getattr(pyads, name)
+            if hasattr(pyads, s):
+                return getattr(pyads, s)
+            try:
+                return eval(s, {"pyads": pyads})
+            except Exception:
+                raise ValueError(f"Unknown value type: {s}")
+
+        if self.args.read:
+            a, b = self.args.read
+            try:
+                valtype = parse_valuetype(b)
+            except ValueError as e:
+                print(e)
+                sys.exit(1)
+            print(testObject.Read_Variable(a, valtype))
+            return
+
+        if self.args.write:
+            a, b, c = self.args.write
+            try:
+                valtype = parse_valuetype(c)
+                value = float(b) if valtype == pyads.PLCTYPE_LREAL else int(b) if valtype in [pyads.PLCTYPE_INT, pyads.PLCTYPE_UINT] else b
+                testObject.Write_Variable(a, value, valtype)
+            except ValueError as e:
+                print(e)
+                sys.exit(1)
+
+args = ArgumentParser().parse()
+
 def main():
-    testObject=ADS_Route()
-    
-    if args.help:
-        print(box)
-        sys.exit(0)
+    testObject = ADS_Route()
+    parser = ArgumentParser()
+    parser.args = args
+    parser.handle_args(testObject)
 
-    def parse_valuetype(s):
-        if isfloat(s):  # Check for float first
-            return float(s)
-        # numeric literal
-        if s.isdigit():
-            return int(s)
-        # pyads.PLCTYPE_INT or PLCTYPE_INT or PLCTYPE_BOOL (without module)
-        if s.startswith("pyads."):
-            name = s.split(".", 1)[1]
-            if hasattr(pyads, name):
-                return getattr(pyads, name)
-        if hasattr(pyads, s):
-            return getattr(pyads, s)
-        # try eval as last resort (limited globals)
-        try:
-            return eval(s, {"pyads": pyads})
-        except Exception:
-            raise ValueError(f"Unknown value type: {s}")
-
-    if args.read:
-        a, b = args.read
-        try:
-            valtype = parse_valuetype(b)
-        except ValueError as e:
-            print(e)
-            sys.exit(1)
-        print(testObject.Read_Variable(a, valtype))
-        return
-
-    if args.write:
-        a, b, c = args.write
-        try:
-            valtype = parse_valuetype(c)
-            # Convert b to float if the value type is LREAL
-            value = float(b) if valtype == pyads.PLCTYPE_LREAL else int(b) if valtype in [pyads.PLCTYPE_INT, pyads.PLCTYPE_UINT] else b
-            testObject.Write_Variable(a, value, valtype)
-        except ValueError as e:
-            print(e)
-            sys.exit(1)
-
-    
-    #print(testObject.data["testVar"]["plc"]) # this will get the handle at the beginning of the connection to allow fast retreival of data later on.
-    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT)) # this will get the value from the XAR
-    #testObject.Write_Variable("testVar", "3", pyads.PLCTYPE_INT)
-    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT))
-    pass
-
-'''---------------------------------------------------------------------------------------------------------'''
 if __name__ == "__main__":
     main()
