@@ -1,6 +1,6 @@
 # This configuration file is used to set up the pyads library objects to establish communication to a TwinCAT XAR
 
-# This is the IP address of the host machine with the TwinCat Software
+# This is the IP address of the host machine with the TwinCat XAR Software
 plc_ip: '192.168.0.3'
 # This should match the plc_ip address. due to no DNS server
 host_name: '192.168.0.3'

@@ -38,3 +38,4 @@ Below is an example of the StaticRoutes.xml
 3. Install the `pyads` with `pip`
 4. Run the python program
 - It then should read the current value of `nCounter`, write to `nCounter` to have a value of 3, then re-reads the value
+5. Alternatively, you can run this by executing in CLI `python .\TwinCAT_Add_Route.py --write testVar 1678.6 PLCTYPE_LREAL `

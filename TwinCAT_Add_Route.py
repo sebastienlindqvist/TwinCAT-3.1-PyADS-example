@@ -2,6 +2,9 @@ import pyads
 import yaml
 from termcolor import colored
 
+import argparse
+import sys
+
 TextFile='./com_comfig.yaml'
 TextFile2='./variables.yaml'
 
@@ -25,41 +28,47 @@ class ADS_Route():
     def Read_ConnectionInfo(self, Filename):
         with open(Filename, "r") as file:
             data = yaml.safe_load(file)
-        # Box width
-        box_width = 65
-        content_width = box_width - 4  # Subtract space for borders (│ and │)
-        # Print the top border
-        print("\n")
-        print("╭─ TwinCAT pyAds" + "─" * (box_width - 19) + "╮")
-        # Print a separator
-        # Print the header
-        header = " This is a demo for connecting to TwinCAT XAR via pyAds "
-        print("│" + header.center(content_width) + "│")
+        if args.show:
+            # Box width
+            box_width = 65
+            content_width = box_width - 4  # Subtract space for borders (│ and │)
+            # Print the top border
+            print("\n")
+            print("╭─ TwinCAT pyAds" + "─" * (box_width - 19) + "╮")
+            # Print a separator
+            # Print the header
+            header = " This is a demo for connecting to TwinCAT XAR via pyAds "
+            print("│" + header.center(content_width) + "│")
 
-        print("├" + "─" * (box_width - 4) + "┤")
-        # Helper function to print each line with proper padding
-        def print_line(key, value):
-            line = f"{key}: {value}"  # Construct the key-value pair
-            # Ensure it fits exactly in the content_width
-            print("│" + line.ljust(content_width) + "│")
-        # Add each line
-        print_line("Route Name", repr(data["route_name"]))
-        print_line("Local AmsNetID", repr(data["sender_ams"]))
-        print_line("Local IP", repr(data["local_ip"]))
-        print_line("PLC AmsNetID", repr(data["remote_ads"]))
-        print_line("PLC IP adress", repr(data["plc_ip"]))
-        print_line("Username", repr(data["Username"]))
-        print_line("Password", repr(data["Password"]))
+            print("├" + "─" * (box_width - 4) + "┤")
+            # Helper function to print each line with proper padding
+            def print_line(key, value):
+                line = f"{key}: {value}"  # Construct the key-value pair
+                # Ensure it fits exactly in the content_width
+                print("│" + line.ljust(content_width) + "│")
+            # Add each line
+            print_line("Route Name", repr(data["route_name"]))
+            print_line("Local AmsNetID", repr(data["sender_ams"]))
+            print_line("Local IP", repr(data["local_ip"]))
+            print_line("PLC AmsNetID", repr(data["remote_ads"]))
+            print_line("PLC IP adress", repr(data["plc_ip"]))
+            print_line("Username", repr(data["Username"]))
+            print_line("Password", repr(data["Password"]))
 
-        # Print the bottom border
-        print("╰" + "─" * (box_width - 4) + "╯")
+            # Print the bottom border
+            print("╰" + "─" * (box_width - 4) + "╯")
         return data["Username"], data["Password"], data["plc_ip"], data["remote_ads"], data["sender_ams"], data["local_ip"], data["route_name"]
     
     def Add_Route(self, SENDER_AMS, HOSTNAME, PLC_IP, USERNAME, PASSWORD, ROUTE_NAME):
-        print("\n- Adding Route to ePC/IPC")
-        print("-----------------------------------------------")
+        if args.show:
+            print("\n- Adding Route to ePC/IPC")
+            print("-----------------------------------------------")
         pyads.open_port()
-        pyads.set_local_address(SENDER_AMS)
+        try:
+            pyads.set_local_address(SENDER_AMS)
+        except:
+            print("Error - error occured setting local AmsNetID")
+            print("Ignore if local machine is Windows")
         try:
             pyads.add_route_to_plc(SENDER_AMS, 
                                 HOSTNAME, 
@@ -75,8 +84,9 @@ class ADS_Route():
         pyads.close_port()
 
     def Open_Connection(self, TARGET_AMS_ID, TARGET_PC_IP):
-        print("\n- Opening connection to ePC/IPC")
-        print("-----------------------------------------------")
+        if args.show:
+            print("\n- Opening connection to ePC/IPC")
+            print("-----------------------------------------------")
         try:
             plc = pyads.Connection(TARGET_AMS_ID, pyads.PORT_TC3PLC1, TARGET_PC_IP)
             plc.open()
@@ -140,17 +150,92 @@ class ADS_Route():
             print(f"------------------------------------------------------- \n")
             return None
 
+'''---------------------------------------------------------------------------------------------------------'''
 
+box = """
+╭───────────────────────────────────────────╮
+│ --hide    Hide print statements           │
+│ --show    Show print statements           │
+│ --read    Enable verbose output           │
+│ --write   Show this help box              │
+╰───────────────────────────────────────────╯
+"""
+
+parser = argparse.ArgumentParser(
+    epilog=box,
+    formatter_class=argparse.RawDescriptionHelpFormatter,
+    add_help=False  # Disable default help
+)
+parser.add_argument('--show', action='store_true', help=argparse.SUPPRESS)
+parser.add_argument('--help', action='store_true', help=argparse.SUPPRESS)  # Custom help
+
+parser.add_argument('--read', nargs=2, type=str, metavar=('A','B'), help=argparse.SUPPRESS)
+parser.add_argument('--write', nargs=3, type=str, metavar=('A','B','C'), help=argparse.SUPPRESS)
+
+args = parser.parse_args()
+
+def isfloat(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+
+'''---------------------------------------------------------------------------------------------------------'''
 def main():
     testObject=ADS_Route()
-    print(testObject.data["testVar"]["plc"]) # this will get the handle at the beginning of the connection to allow fast retreival of data later on.
+    
+    if args.help:
+        print(box)
+        sys.exit(0)
 
-    print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT)) # this will get the value from the XAR
+    def parse_valuetype(s):
+        if isfloat(s):  # Check for float first
+            return float(s)
+        # numeric literal
+        if s.isdigit():
+            return int(s)
+        # pyads.PLCTYPE_INT or PLCTYPE_INT or PLCTYPE_BOOL (without module)
+        if s.startswith("pyads."):
+            name = s.split(".", 1)[1]
+            if hasattr(pyads, name):
+                return getattr(pyads, name)
+        if hasattr(pyads, s):
+            return getattr(pyads, s)
+        # try eval as last resort (limited globals)
+        try:
+            return eval(s, {"pyads": pyads})
+        except Exception:
+            raise ValueError(f"Unknown value type: {s}")
 
-    testObject.Write_Variable("testVar", "3", pyads.PLCTYPE_INT)
+    if args.read:
+        a, b = args.read
+        try:
+            valtype = parse_valuetype(b)
+        except ValueError as e:
+            print(e)
+            sys.exit(1)
+        print(testObject.Read_Variable(a, valtype))
+        return
 
-    print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT))
+    if args.write:
+        a, b, c = args.write
+        try:
+            valtype = parse_valuetype(c)
+            # Convert b to float if the value type is LREAL
+            value = float(b) if valtype == pyads.PLCTYPE_LREAL else int(b) if valtype in [pyads.PLCTYPE_INT, pyads.PLCTYPE_UINT] else b
+            testObject.Write_Variable(a, value, valtype)
+        except ValueError as e:
+            print(e)
+            sys.exit(1)
+
+    
+    #print(testObject.data["testVar"]["plc"]) # this will get the handle at the beginning of the connection to allow fast retreival of data later on.
+    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT)) # this will get the value from the XAR
+    #testObject.Write_Variable("testVar", "3", pyads.PLCTYPE_INT)
+    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT))
     pass
 
+'''---------------------------------------------------------------------------------------------------------'''
 if __name__ == "__main__":
     main()
