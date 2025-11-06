@@ -232,5 +232,14 @@ def main():
     parser.args = args
     parser.handle_args(testObject)
 
+
+    #--------------------------------------
+    #      Examples below
+    #-------------------------------------
+    #print(testObject.data["testVar"]["plc"]) # this will get the handle at the beginning of the connection to allow fast retreival of data later on.
+    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT)) # this will get the value from the XAR
+    #testObject.Write_Variable("testVar", "3", pyads.PLCTYPE_INT) # this will write a value of 3 to the XAR
+    #print(testObject.Read_Variable("testVar", pyads.PLCTYPE_INT)) # this will get the value from the XAR
+
 if __name__ == "__main__":
     main()

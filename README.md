@@ -32,10 +32,22 @@ Below is an example of the StaticRoutes.xml
 - This will be the same IP address if you're running this locally on the TwinCAT RT/Linux.
 - However, the NetID (short for AmsNetID) in the `StaticRoutes.xml` needs to be differnt to the AmsNetID for TwinCAT XAR runtime on the TwinCAT RT/Linux.
 
-## How to run:
-1. Rename the `com_comfig(Example).yaml` to `com_comfig.yaml`.
+## ⚙️ Installation
+- Install packages with pip
+  ```shell
+  pip install -r requirements.txt
+  ```
+## 🗝️️ Usage
+1. Have TwinCAT 3.1 project running with variable `nCounter` in `Main (PRG)`
+2. Rename the `com_comfig(Example).yaml` to `com_comfig.yaml`.
 2. Fill `com_comfig.yaml` with the necessary information.
-3. Install the `pyads` with `pip`
-4. Run the python program
-- It then should read the current value of `nCounter`, write to `nCounter` to have a value of 3, then re-reads the value
-5. Alternatively, you can run this by executing in CLI `python .\TwinCAT_Add_Route.py --write testVar 1678.6 PLCTYPE_LREAL `
+3. Run the python program from `Command line/prompt` with:
+```shell
+python .\TwinCAT_Add_Route.py --read testVar PLCTYPE_INT
+```
+- It then should read the current value of `nCounter`
+- for more information, run:
+```shell
+python .\TwinCAT_Add_Route.py --help
+```
+5. Alternatively, you import this into your own program or edit the `def main()` section of the program.
